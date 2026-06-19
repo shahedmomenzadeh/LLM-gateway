@@ -1,0 +1,43 @@
+# LLM Gateway - Provider & Waterfall Configuration
+# Copy this file to config.yaml and fill in your API keys.
+
+gateway:
+  rate_limit_rpm: 0
+  key_cooldown_seconds: 20
+  timeout: 60.0
+  waterfall_max_cycles: 10
+  # ssl_certfile: certs/cert.pem
+  # ssl_keyfile: certs/key.pem
+  host: 0.0.0.0
+  port: 8000
+
+providers:
+  openai:
+    base_url: https://api.openai.com/v1
+    timeout: 60.0
+    max_retries: 1
+    api_keys:
+      - sk-your-openai-key-here
+    extra_headers: {}
+
+  # Add more providers as needed, e.g.:
+  # nvidia:
+  #   base_url: https://integrate.api.nvidia.com/v1
+  #   timeout: 60.0
+  #   max_retries: 2
+  #   api_keys:
+  #     - nvapi-your-nvidia-key-here
+  #   extra_headers: {}
+
+  # openrouter:
+  #   base_url: https://openrouter.ai/api/v1
+  #   timeout: 60.0
+  #   max_retries: 5
+  #   api_keys:
+  #     - sk-or-v1-your-openrouter-key-here
+
+waterfall:
+  - provider: openai
+    models:
+      - gpt-4o
+      - gpt-4o-mini
