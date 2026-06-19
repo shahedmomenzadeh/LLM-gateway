@@ -31,20 +31,35 @@ even when one key gets rate-limited or one provider goes down.
 - **Admin endpoints** — `GET /health`, `GET /status`, `POST /admin/reload`
 - **User-sent `model` is ignored** — the waterfall decides which model is used.
 
-## Quick start
+## Project setup (uv)
+
+[uv](https://docs.astral.sh/uv/) is a fast Python package manager. Install it first:
 
 ```bash
-cd llm-gateway
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+# macOS / Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# Edit config.yaml with your real API keys
+# Windows (PowerShell)
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+Then clone and set up the project:
+
+```bash
+git clone https://github.com/shahedmomenzadeh/LLM-gateway.git
+cd LLM-gateway
+
+# Copy the example config and add your API keys
+cp config.example.yaml config.yaml
 $EDITOR config.yaml
 
-# Run
-python main.py
+# Install dependencies (creates .venv automatically)
+uv sync
+
+# Run the gateway
+uv run llm-gateway
 # or
-uvicorn main:app --host 0.0.0.0 --port 8000
+uv run uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
 ## Configuring coding agents
@@ -67,6 +82,38 @@ OPENAI_API_KEY=dummy   # the proxy ignores this
 ANTHROPIC_BASE_URL=http://localhost:8000
 ANTHROPIC_API_KEY=dummy
 ```
+
+## Using from WSL on Windows
+
+If you run the gateway inside **WSL** and want to access it from **Windows** (or
+other machines on your LAN), `localhost` won't work — WSL has its own network
+stack. Use the WSL instance's IP address instead.
+
+**Find your WSL IP:**
+
+```bash
+# Inside WSL
+hostname -I
+# e.g. 172.28.13.246
+```
+
+Then point your coding agents at that IP:
+
+```
+OPENAI_BASE_URL=http://172.28.13.246:8000/v1
+OPENAI_API_KEY=dummy
+```
+
+Or for Anthropic-compatible tools:
+
+```
+ANTHROPIC_BASE_URL=http://172.28.13.246:8000
+ANTHROPIC_API_KEY=dummy
+```
+
+> **Note:** The WSL IP can change on reboot. If it changes, update your
+> agent's config accordingly. The gateway binds to `0.0.0.0` by default, so it
+> is reachable from outside WSL as long as the firewall allows port 8000.
 
 ## Config file
 
@@ -160,9 +207,10 @@ curl -X POST http://localhost:8000/admin/reload
 ## Project layout
 
 ```
-llm-gateway/
-├── config.yaml              # sample config (edit with your keys)
-├── requirements.txt
+LLM-gateway/
+├── pyproject.toml           # project metadata + dependencies (uv)
+├── config.example.yaml      # sample config — copy to config.yaml
+├── config.yaml              # your config with real API keys (git-ignored)
 ├── main.py                  # FastAPI entry point + uvicorn launcher
 ├── gateway/
 │   ├── __init__.py
@@ -177,7 +225,7 @@ llm-gateway/
 │   ├── watcher.py           # config hot-reload watcher
 │   └── logging_setup.py     # structured logs + JSONL request log
 └── logs/
-    └── requests.jsonl       # created at runtime
+    └── requests.jsonl       # created at runtime (git-ignored)
 ```
 
 ## License
